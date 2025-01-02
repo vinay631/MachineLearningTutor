@@ -17,7 +17,8 @@ export const lessons = pgTable("lessons", {
   description: text("description").notNull(),
   difficulty: integer("difficulty").notNull(),
   order: integer("order").notNull(),
-  module: text("module").notNull()
+  module: text("module").notNull(),
+  type: text("type").notNull().default('quiz'), // 'quiz' or 'coding'
 });
 
 export const userProgress = pgTable("user_progress", {
@@ -38,8 +39,20 @@ export const questions = pgTable("questions", {
   explanation: text("explanation").notNull()
 });
 
-export const lessonRelations = relations(lessons, ({ many }) => ({
-  questions: many(questions)
+export const codingExercises = pgTable("coding_exercises", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lesson_id").references(() => lessons.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  initialCode: text("initial_code").notNull(),
+  solution: text("solution").notNull(),
+  testCases: text("test_cases").notNull(), // JSON string of test cases
+  hints: text("hints").notNull(), // JSON string of hints
+});
+
+export const lessonRelations = relations(lessons, ({ many, one }) => ({
+  questions: many(questions),
+  codingExercises: many(codingExercises)
 }));
 
 export const userProgressRelations = relations(userProgress, ({ one }) => ({
@@ -60,3 +73,4 @@ export type InsertUser = typeof users.$inferInsert;
 export type Lesson = typeof lessons.$inferSelect;
 export type Question = typeof questions.$inferSelect;
 export type UserProgress = typeof userProgress.$inferSelect;
+export type CodingExercise = typeof codingExercises.$inferSelect;

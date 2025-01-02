@@ -8,17 +8,23 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { Lesson, Question } from "@db/schema";
+import CodeEditor from "@/components/CodeEditor";
+import type { Lesson, Question, CodingExercise } from "@db/schema";
+
+type LessonWithContent = Lesson & {
+  questions: Question[];
+  codingExercises: CodingExercise[];
+};
 
 export default function LessonPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const [score, setScore] = useState(0);
   const { toast } = useToast();
 
-  const { data: lesson } = useQuery<Lesson & { questions: Question[] }>({
+  const { data: lesson } = useQuery<LessonWithContent>({
     queryKey: [`/api/lessons/${id}`],
   });
 
@@ -39,12 +45,13 @@ export default function LessonPage() {
     return null;
   }
 
-  const questions = lesson.questions;
-  const currentQ = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const content = lesson.type === 'quiz' ? lesson.questions : lesson.codingExercises;
+  const totalItems = content.length;
+  const currentItem = content[currentIndex];
+  const progress = ((currentIndex + 1) / totalItems) * 100;
 
-  const handleNext = () => {
-    if (!selectedAnswer) {
+  const handleNext = (passed: boolean) => {
+    if (lesson.type === 'quiz' && !selectedAnswer) {
       toast({
         variant: "destructive",
         title: "Please select an answer",
@@ -52,19 +59,24 @@ export default function LessonPage() {
       return;
     }
 
-    const correct = selectedAnswer === currentQ.correctAnswer;
-    if (correct) {
+    if (lesson.type === 'quiz') {
+      const currentQ = currentItem as Question;
+      const correct = selectedAnswer === currentQ.correctAnswer;
+      if (correct) {
+        setScore(score + 1);
+      }
+
+      toast({
+        variant: correct ? "default" : "destructive",
+        title: correct ? "Correct!" : "Incorrect",
+        description: currentQ.explanation,
+      });
+    } else if (passed) {
       setScore(score + 1);
     }
 
-    toast({
-      variant: correct ? "default" : "destructive",
-      title: correct ? "Correct!" : "Incorrect",
-      description: currentQ.explanation,
-    });
-
-    if (currentQuestion === questions.length - 1) {
-      const finalScore = ((score + (correct ? 1 : 0)) / questions.length) * 100;
+    if (currentIndex === totalItems - 1) {
+      const finalScore = ((score + (passed ? 1 : 0)) / totalItems) * 100;
       submitProgress.mutate(finalScore, {
         onSuccess: () => {
           toast({
@@ -75,13 +87,13 @@ export default function LessonPage() {
         },
       });
     } else {
-      setCurrentQuestion(currentQuestion + 1);
+      setCurrentIndex(currentIndex + 1);
       setSelectedAnswer("");
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       <Button
         variant="ghost"
         onClick={() => setLocation("/")}
@@ -95,36 +107,45 @@ export default function LessonPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {currentQ.question}
-          </h2>
+          {lesson.type === 'quiz' ? (
+            <>
+              <h2 className="text-xl font-semibold mb-4">
+                {(currentItem as Question).question}
+              </h2>
 
-          <RadioGroup
-            value={selectedAnswer}
-            onValueChange={setSelectedAnswer}
-            className="space-y-4"
-          >
-            {JSON.parse(currentQ.options).map((option: string) => (
-              <div key={option} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={option} />
-                <Label htmlFor={option}>{option}</Label>
-              </div>
-            ))}
-          </RadioGroup>
+              <RadioGroup
+                value={selectedAnswer}
+                onValueChange={setSelectedAnswer}
+                className="space-y-4"
+              >
+                {JSON.parse((currentItem as Question).options).map((option: string) => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={option} />
+                    <Label htmlFor={option}>{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
 
-          <Button
-            onClick={handleNext}
-            className="mt-6 w-full"
-          >
-            {currentQuestion === questions.length - 1 ? (
-              "Complete Lesson"
-            ) : (
-              <>
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </>
-            )}
-          </Button>
+              <Button
+                onClick={() => handleNext(false)}
+                className="mt-6 w-full"
+              >
+                {currentIndex === totalItems - 1 ? (
+                  "Complete Lesson"
+                ) : (
+                  <>
+                    Next
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
+            </>
+          ) : (
+            <CodeEditor
+              exercise={currentItem as CodingExercise}
+              onComplete={handleNext}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
