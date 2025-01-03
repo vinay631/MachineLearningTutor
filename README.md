@@ -1,2 +1,2 @@
-git clone [your-repository-url]
+git clone <repository-url>
 cd ml-learning-platform

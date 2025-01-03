@@ -1,39 +1,10 @@
-import { useState } from "react";
-import { useUser } from "@/hooks/use-user";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { SiGoogle } from "react-icons/si";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const { login, register } = useUser();
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (isLogin) {
-        const result = await login({ username, password });
-        if (!result.ok) {
-          throw new Error(result.message);
-        }
-      } else {
-        const result = await register({ username, password });
-        if (!result.ok) {
-          throw new Error(result.message);
-        }
-      }
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message
-      });
-    }
+  const handleGoogleLogin = () => {
+    window.location.href = "/auth/google";
   };
 
   return (
@@ -45,36 +16,12 @@ export default function AuthPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              {isLogin ? "Login" : "Register"}
-            </Button>
-          </form>
           <Button
-            variant="link"
-            className="mt-4 w-full"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={handleGoogleLogin}
+            className="w-full flex items-center justify-center gap-2"
           >
-            {isLogin ? "Need an account? Register" : "Have an account? Login"}
+            <SiGoogle className="h-4 w-4" />
+            Continue with Google
           </Button>
         </CardContent>
       </Card>
