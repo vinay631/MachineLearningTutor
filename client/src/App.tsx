@@ -5,6 +5,7 @@ import AuthPage from "./pages/AuthPage";
 import HomePage from "./pages/HomePage";
 import LessonPage from "./pages/LessonPage";
 import ProfilePage from "./pages/ProfilePage";
+import DiagnosticQuizPage from "./pages/DiagnosticQuizPage";
 import Header from "./components/Header";
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
           <Route path="/" component={HomePage} />
           <Route path="/lesson/:id" component={LessonPage} />
           <Route path="/profile" component={ProfilePage} />
+          <Route path="/diagnostic-quiz" component={DiagnosticQuizPage} />
         </Switch>
       </main>
     </div>

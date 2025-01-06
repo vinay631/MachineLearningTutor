@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { Brain, BookOpen, Award, Sparkles } from "lucide-react";
+import { Brain, BookOpen, Award, Sparkles, Target } from "lucide-react";
 import type { Lesson } from "@db/schema";
 
 interface RecommendedLesson extends Lesson {
@@ -34,6 +34,14 @@ export default function HomePage() {
         <p className="text-muted-foreground max-w-2xl mx-auto">
           Master ML concepts through interactive lessons and hands-on practice
         </p>
+        <Button
+          onClick={() => setLocation("/diagnostic-quiz")}
+          size="lg"
+          className="mt-4"
+        >
+          <Target className="mr-2 h-5 w-5" />
+          Take Skill Assessment
+        </Button>
       </div>
 
       {recommendations && recommendations.length > 0 && (
